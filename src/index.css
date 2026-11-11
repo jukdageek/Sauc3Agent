@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+/* Metal Screws for TVB Rack Look */
+.rack-screw {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #64748b, #1e293b);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 2px 4px rgba(0, 0, 0, 0.8);
+  position: relative;
+  flex-shrink: 0;
+}
+.rack-screw::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7px;
+  height: 1.5px;
+  background: #0f172a;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+/* Glow LEDs */
+.glow-led-red { box-shadow: 0 0 10px #ef4444, inset 0 0 4px #fca5a5; }
+.glow-led-green { box-shadow: 0 0 10px #10b981, inset 0 0 4px #6ee7b7; }
+.glow-led-blue { box-shadow: 0 0 10px #00f2fe, inset 0 0 4px #a5f3fc; }
+.glow-led-amber { box-shadow: 0 0 10px #f59e0b, inset 0 0 4px #fde68a; }
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0c0d10;
+}
+::-webkit-scrollbar-thumb {
+  background: #262933;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f4455;
+}

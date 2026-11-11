@@ -1,0 +1,1497 @@
+
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAUC3 AGENT - Digital Audio Rack & Studio Assistant</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff1f2',
+              100: '#ffe4e6',
+              500: '#f43f5e',
+              600: '#e11d48',
+              900: '#881337',
+              accent: '#00f2fe',
+              neon: '#39ff14'
+            },
+            rack: {
+              bg: '#0c0d10',
+              panel: '#15171e',
+              panelDark: '#101116',
+              border: '#262933',
+              knobBorder: '#3b3f51',
+              screen: '#050608'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Skeuomorphic & Cyber Studio Rack Styling */
+    body {
+      background-color: #08090b;
+      color: #e2e8f0;
+      user-select: none;
+    }
+
+    /* Metal Screws for TVB Rack Look */
+    .rack-screw {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #64748b, #1e293b);
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.8);
+      position: relative;
+    }
+    .rack-screw::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 8px;
+      height: 2px;
+      background: #0f172a;
+      transform: translate(-50%, -50%) rotate(45deg);
+    }
+
+    /* Custom Knobs */
+    .knob-container {
+      position: relative;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      touch-action: none;
+    }
+
+    .knob-dial {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: conic-gradient(from 225deg, #00f2fe 0%, #f43f5e var(--knob-pct, 0%), #1e293b var(--knob-pct, 0%), #1e293b 100%);
+      padding: 3px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.2);
+      cursor: ns-resize;
+      transition: box-shadow 0.2s ease;
+    }
+
+    .knob-dial:hover {
+      box-shadow: 0 0 12px rgba(244, 63, 94, 0.4), 0 4px 10px rgba(0,0,0,0.8);
+    }
+
+    .knob-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #2a2e3d, #12141a);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .knob-indicator {
+      position: absolute;
+      width: 3px;
+      height: 18px;
+      background: #ffffff;
+      top: 4px;
+      border-radius: 2px;
+      box-shadow: 0 0 6px #ffffff;
+      transform-origin: bottom center;
+    }
+
+    /* Glowing Meters */
+    .glow-led-red { box-shadow: 0 0 8px #ef4444; }
+    .glow-led-green { box-shadow: 0 0 8px #10b981; }
+    .glow-led-blue { box-shadow: 0 0 8px #00f2fe; }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0c0d10;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #262933;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3f4455;
+    }
+
+    /* Visualizer Canvas */
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden font-sans">
+
+  <!-- TOP HEADER / STUDIO NAVIGATION BAR -->
+  <header class="h-14 bg-rack-panelDark border-b border-rack-border flex items-center justify-between px-4 z-20">
+    <div class="flex items-center space-x-3">
+      <div class="flex items-center space-x-2">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 to-brand-accent flex items-center justify-center font-black text-white text-lg tracking-wider shadow-lg">
+          S3
+        </div>
+        <div>
+          <h1 class="text-sm font-bold tracking-wider text-slate-100 flex items-center gap-2">
+            SAUC3 AGENT <span class="text-[10px] bg-brand-600/30 text-brand-accent border border-brand-accent/30 px-1.5 py-0.5 rounded font-mono">v2.5 RACK</span>
+          </h1>
+          <p class="text-[10px] text-slate-400 font-mono">NEXT-GEN AUDIO ENGINE & STUDIO ASSISTANT</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN AUDIO CONTROLS / INPUT SELECTOR -->
+    <div class="flex items-center space-x-3">
+      <!-- Input Source Switcher -->
+      <div class="flex bg-rack-screen rounded-lg border border-rack-border p-1 space-x-1">
+        <button id="btn-input-mic" onclick="switchAudioSource('mic')" class="px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 transition text-slate-400 hover:text-slate-200">
+          <i class="fa-solid font-bold fa-microphone"></i> Live Mic
+        </button>
+        <button id="btn-input-file" onclick="switchAudioSource('file')" class="px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 bg-brand-600 text-white shadow">
+          <i class="fa-solid fa-file-audio"></i> Audio File
+        </button>
+        <button id="btn-input-synth" onclick="switchAudioSource('demo')" class="px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 text-slate-400 hover:text-slate-200">
+          <i class="fa-solid fa-wave-square"></i> Demo Tone
+        </button>
+      </div>
+
+      <!-- File Load Input (Hidden) -->
+      <input type="file" id="audio-file-input" accept="audio/*" class="hidden" onchange="handleFileUpload(event)">
+      <button onclick="document.getElementById('audio-file-input').click()" class="bg-rack-panel border border-rack-border hover:border-slate-500 text-slate-300 text-xs px-3 py-1.5 rounded-lg flex items-center gap-2 transition">
+        <i class="fa-solid fa-upload text-brand-accent"></i> Import Track
+      </button>
+
+      <!-- Playback Transport Controls -->
+      <div class="flex items-center space-x-1 bg-rack-screen px-2 py-1 rounded-lg border border-rack-border">
+        <button id="btn-play" onclick="togglePlayback()" class="w-8 h-8 rounded flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 transition">
+          <i class="fa-solid fa-play text-xs" id="play-icon"></i>
+        </button>
+        <button onclick="stopPlayback()" class="w-8 h-8 rounded flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 transition">
+          <i class="fa-solid fa-stop text-xs"></i>
+        </button>
+        <button id="btn-loop" onclick="toggleLoop()" class="w-8 h-8 rounded flex items-center justify-center text-slate-400 hover:text-white transition" title="Toggle Loop">
+          <i class="fa-solid fa-repeat text-xs"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- RIGHT HEADER: MASTER METERS & AI TOGGLE -->
+    <div class="flex items-center space-x-4">
+      <!-- Master Level Quick Indicator -->
+      <div class="flex items-center space-x-2 bg-rack-screen px-3 py-1 rounded-lg border border-rack-border font-mono text-xs">
+        <span class="text-slate-400 text-[10px]">PEAK</span>
+        <span id="header-peak-meter" class="text-emerald-400 font-bold w-12 text-right">-INF dB</span>
+      </div>
+
+      <button onclick="toggleAiDrawer()" class="bg-gradient-to-r from-brand-600 to-purple-600 text-white text-xs px-3 py-1.5 rounded-lg font-semibold flex items-center gap-2 shadow-lg hover:brightness-110 transition">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> AI Vocal Agent
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN STUDIO WORKSPACE -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- LEFT PANEL: REAL-TIME KEY DETECTOR, GAIN STAGING & MUZE/PLAYHEAD METRICS -->
+    <aside class="w-80 bg-rack-panelDark border-r border-rack-border flex flex-col p-3 space-y-3 overflow-y-auto z-10">
+      
+      <!-- MUZE & PLAYHEAD ANALYZER HEADER -->
+      <div class="flex items-center justify-between border-b border-rack-border pb-2">
+        <span class="text-xs font-bold tracking-wider text-slate-300 uppercase flex items-center gap-2">
+          <i class="fa-solid fa-chart-simple text-brand-accent"></i> Real-time Analyzer
+        </span>
+        <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 font-mono">LIVE 60FPS</span>
+      </div>
+
+      <!-- KEY & SCALE DETECTOR (PLAYHEAD STYLE) -->
+      <div class="bg-rack-panel border border-rack-border rounded-xl p-3 relative overflow-hidden shadow-inner">
+        <div class="absolute -right-4 -top-4 w-20 h-20 bg-brand-accent/5 rounded-full blur-xl"></div>
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Musical Key & Scale</span>
+          <span class="text-[10px] text-slate-500 font-mono" id="key-confidence">CONF: --%</span>
+        </div>
+
+        <div class="flex items-baseline justify-between py-2">
+          <div class="text-3xl font-extrabold font-mono tracking-tight text-white flex items-baseline gap-2">
+            <span id="detected-key" class="text-brand-accent">C</span>
+            <span id="detected-scale" class="text-lg text-slate-300 font-normal">Major</span>
+          </div>
+          <div class="text-right">
+            <div id="detected-freq" class="text-xs font-mono text-slate-400">440.0 Hz</div>
+            <div id="detected-cents" class="text-[10px] font-mono text-emerald-400">+0 Cents</div>
+          </div>
+        </div>
+
+        <!-- Pitch Tuning Bar -->
+        <div class="w-full bg-rack-screen h-2 rounded-full overflow-hidden relative border border-rack-border mt-1">
+          <div class="absolute top-0 bottom-0 w-0.5 bg-slate-500 left-1/2 -translate-x-1/2"></div>
+          <div id="cents-indicator" class="h-full bg-brand-accent w-2 rounded-full relative transition-all duration-75" style="left: 50%;"></div>
+        </div>
+
+        <!-- Chroma Distribution Profile -->
+        <div class="mt-3 grid grid-cols-12 gap-0.5 h-8 items-end bg-rack-screen p-1 rounded border border-rack-border">
+          <div class="chroma-bar bg-brand-600/60 rounded-t h-1/4" title="C"></div>
+          <div class="chroma-bar bg-brand-600/60 rounded-t h-1/3" title="C#"></div>
+          <div class="chroma-bar bg-brand-600/60 rounded-t h-1/2" title="D"></div>
+          <div class="chroma-bar bg-brand-600/60 rounded-t h-1/5" title="D#"></div>
+          <div class="chroma-bar bg-brand-600/60 rounded-t h-3/4" title="E"></div>
+          <div class="chroma-bar bg-brand-600/60 rounded-t h-2/3" title="F"></div>
+          <div class="chroma-bar bg-brand-600/60 rounded-t h-1/3" title="F#"></div>
+          <div class="chroma-bar bg-brand-600/60 rounded-t h-4/5" title="G"></div>
+          <div class="chroma-bar bg-brand-600/60 rounded-t h-1/4" title="G#"></div>
+          <div class="chroma-bar bg-brand-600/60 rounded-t h-2/4" title="A"></div>
+          <div class="chroma-bar bg-brand-600/60 rounded-t h-1/3" title="A#"></div>
+          <div class="chroma-bar bg-brand-600/60 rounded-t h-3/5" title="B"></div>
+        </div>
+        <div class="flex justify-between text-[8px] font-mono text-slate-500 mt-1 px-0.5">
+          <span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>A</span><span>B</span>
+        </div>
+      </div>
+
+      <!-- GAIN STAGING & LOUDNESS ENGINE (MUZE STYLE) -->
+      <div class="bg-rack-panel border border-rack-border rounded-xl p-3 space-y-3">
+        <div class="flex justify-between items-center">
+          <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Gain Staging Assistant</span>
+          <span id="gain-stage-status" class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded font-mono">OPTIMAL</span>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="bg-rack-screen p-2 rounded-lg border border-rack-border">
+            <div class="text-[9px] text-slate-500 font-mono">PEAK</div>
+            <div id="meter-peak-val" class="text-sm font-bold font-mono text-slate-200">-INF</div>
+          </div>
+          <div class="bg-rack-screen p-2 rounded-lg border border-rack-border">
+            <div class="text-[9px] text-slate-500 font-mono">RMS</div>
+            <div id="meter-rms-val" class="text-sm font-bold font-mono text-slate-200">-INF</div>
+          </div>
+          <div class="bg-rack-screen p-2 rounded-lg border border-rack-border">
+            <div class="text-[9px] text-slate-500 font-mono">LUFS</div>
+            <div id="meter-lufs-val" class="text-sm font-bold font-mono text-slate-200">-INF</div>
+          </div>
+        </div>
+
+        <!-- Level VU Bars -->
+        <div class="space-y-1.5 pt-1">
+          <div>
+            <div class="flex justify-between text-[10px] text-slate-400 font-mono mb-0.5">
+              <span>PEAK LEVEL</span>
+              <span id="peak-db-label">-18 dB Target</span>
+            </div>
+            <div class="h-2 bg-rack-screen rounded-full overflow-hidden border border-rack-border p-0.5">
+              <div id="bar-peak" class="h-full bg-gradient-to-r from-emerald-500 via-yellow-400 to-red-500 rounded-full w-0 transition-all duration-75"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-[10px] text-slate-400 font-mono mb-0.5">
+              <span>RMS POWER</span>
+              <span>DYNAMIC RANGE</span>
+            </div>
+            <div class="h-2 bg-rack-screen rounded-full overflow-hidden border border-rack-border p-0.5">
+              <div id="bar-rms" class="h-full bg-brand-accent rounded-full w-0 transition-all duration-75"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gain Recommendation Alert -->
+        <div id="gain-recommendation" class="bg-rack-screen/60 border border-rack-border rounded-lg p-2 text-[11px] text-slate-300 flex items-start gap-2">
+          <i class="fa-solid fa-circle-info text-brand-accent mt-0.5"></i>
+          <span>Target vocal headroom is -18 dBFS to -12 dBFS peak. Adjust Preamp gain for clean saturation.</span>
+        </div>
+      </div>
+
+      <!-- SPECTRUM VISUALIZER & OSCILLOSCOPE TOGGLE -->
+      <div class="bg-rack-panel border border-rack-border rounded-xl p-3 flex-1 flex flex-col">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Live Scope & FFT</span>
+          <div class="flex bg-rack-screen rounded border border-rack-border p-0.5 text-[10px] font-mono">
+            <button id="btn-mode-fft" onclick="setVisualizerMode('fft')" class="px-2 py-0.5 rounded bg-brand-600 text-white">FFT</button>
+            <button id="btn-mode-wave" onclick="setVisualizerMode('wave')" class="px-2 py-0.5 rounded text-slate-400">WAVE</button>
+          </div>
+        </div>
+        <div class="flex-1 bg-rack-screen border border-rack-border rounded-lg overflow-hidden relative min-h-[120px]">
+          <canvas id="scope-canvas" class="w-full h-full"></canvas>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- CENTER RACK CONTAINER (TVB RACK STYLE) -->
+    <main class="flex-1 bg-rack-bg overflow-y-auto p-4 space-y-4">
+
+      <!-- RACK TOP TOOLBAR -->
+      <div class="flex items-center justify-between bg-rack-panel p-3 rounded-xl border border-rack-border shadow-md">
+        <div class="flex items-center space-x-3">
+          <div class="rack-screw"></div>
+          <span class="text-xs font-bold uppercase tracking-widest text-slate-300 font-mono">
+            TVB-STYLE VOCAL RACK CHASSIS
+          </span>
+          <span class="text-[10px] bg-brand-600/20 text-brand-500 border border-brand-600/30 px-2 py-0.5 rounded font-mono">
+            7 MODULES ACTIVE
+          </span>
+        </div>
+
+        <!-- Preset Manager -->
+        <div class="flex items-center space-x-2">
+          <label class="text-xs text-slate-400 font-mono">PRESET:</label>
+          <select id="preset-selector" onchange="loadPreset(this.value)" class="bg-rack-screen border border-rack-border text-slate-200 text-xs rounded-lg px-3 py-1.5 font-mono focus:outline-none focus:border-brand-accent">
+            <option value="modern-vocal">Modern Trap Lead Vocal</option>
+            <option value="crisp-pop">Crisp Bright Pop Vocal</option>
+            <option value="warm-tube">Warm Vintage Tube Analog</option>
+            <option value="heavy-autotune">Hard Tune Hyperpop Agent</option>
+            <option value="clean-podcast">Podcast / Voiceover Clean</option>
+            <option value="bypass">All Modules Flat / Bypass</option>
+          </select>
+          <button onclick="resetRack()" class="bg-rack-panel border border-rack-border hover:bg-slate-800 text-slate-300 text-xs px-3 py-1.5 rounded-lg transition" title="Reset All Modules">
+            <i class="fa-solid fa-rotate-left"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- MODULE 1: PREAMP / TUBE SATURATOR -->
+      <section class="bg-rack-panel border border-rack-border rounded-xl p-4 shadow-xl relative overflow-hidden">
+        <div class="absolute left-2 top-2 rack-screw"></div>
+        <div class="absolute right-2 top-2 rack-screw"></div>
+        <div class="absolute left-2 bottom-2 rack-screw"></div>
+        <div class="absolute right-2 bottom-2 rack-screw"></div>
+
+        <div class="flex items-center justify-between pb-3 border-b border-rack-border mb-4 px-4">
+          <div class="flex items-center space-x-3">
+            <button onclick="toggleBypass('preamp')" id="bypass-preamp" class="w-4 h-4 rounded-full bg-emerald-500 glow-led-green transition cursor-pointer" title="Toggle Bypass"></button>
+            <h2 class="text-sm font-extrabold tracking-wider text-slate-200 uppercase font-mono">01. CONSOLE PREAMP & TUBE SATURATION</h2>
+          </div>
+          <span class="text-[10px] text-amber-400 font-mono bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded">ANALOG WARMTH</span>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 px-4">
+          <!-- Input Gain Knob -->
+          <div class="knob-container" data-knob="preamp-gain" data-min="-24" data-max="24" data-value="6" data-unit="dB">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">PREAMP GAIN</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">+6.0 dB</span>
+          </div>
+
+          <!-- Saturation Knob -->
+          <div class="knob-container" data-knob="preamp-drive" data-min="0" data-max="100" data-value="25" data-unit="%">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">TUBE DRIVE</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">25%</span>
+          </div>
+
+          <!-- High Pass Filter Knob -->
+          <div class="knob-container" data-knob="preamp-hpf" data-min="20" data-max="300" data-value="80" data-unit="Hz">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">LOW CUT (HPF)</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">80 Hz</span>
+          </div>
+
+          <!-- Output Trim Knob -->
+          <div class="knob-container" data-knob="preamp-out" data-min="-24" data-max="12" data-value="0" data-unit="dB">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">TRIM OUT</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">0.0 dB</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- MODULE 2: TUBE OPTICAL COMPRESSOR -->
+      <section class="bg-rack-panel border border-rack-border rounded-xl p-4 shadow-xl relative">
+        <div class="absolute left-2 top-2 rack-screw"></div>
+        <div class="absolute right-2 top-2 rack-screw"></div>
+        <div class="absolute left-2 bottom-2 rack-screw"></div>
+        <div class="absolute right-2 bottom-2 rack-screw"></div>
+
+        <div class="flex items-center justify-between pb-3 border-b border-rack-border mb-4 px-4">
+          <div class="flex items-center space-x-3">
+            <button onclick="toggleBypass('comp')" id="bypass-comp" class="w-4 h-4 rounded-full bg-emerald-500 glow-led-green transition cursor-pointer"></button>
+            <h2 class="text-sm font-extrabold tracking-wider text-slate-200 uppercase font-mono">02. OPTICAL TUBE COMPRESSOR (OPTO 2A)</h2>
+          </div>
+          <!-- Gain Reduction Meter -->
+          <div class="flex items-center space-x-2 bg-rack-screen border border-rack-border px-3 py-1 rounded font-mono text-xs">
+            <span class="text-slate-500 text-[10px]">GR:</span>
+            <span id="gr-meter-text" class="text-red-400 font-bold">-0.0 dB</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 px-4">
+          <!-- Threshold -->
+          <div class="knob-container" data-knob="comp-thresh" data-min="-60" data-max="0" data-value="-18" data-unit="dB">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">THRESHOLD</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">-18 dB</span>
+          </div>
+
+          <!-- Ratio -->
+          <div class="knob-container" data-knob="comp-ratio" data-min="1" data-max="20" data-value="4" data-unit=":1">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">RATIO</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">4:1</span>
+          </div>
+
+          <!-- Attack/Release Speed -->
+          <div class="knob-container" data-knob="comp-attack" data-min="1" data-max="100" data-value="20" data-unit="ms">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">ATTACK</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">20 ms</span>
+          </div>
+
+          <!-- Makeup Gain -->
+          <div class="knob-container" data-knob="comp-makeup" data-min="0" data-max="24" data-value="3" data-unit="dB">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">MAKEUP GAIN</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">+3.0 dB</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- MODULE 3: 4-BAND PARAMETRIC VOCAL EQ -->
+      <section class="bg-rack-panel border border-rack-border rounded-xl p-4 shadow-xl relative">
+        <div class="absolute left-2 top-2 rack-screw"></div>
+        <div class="absolute right-2 top-2 rack-screw"></div>
+        <div class="absolute left-2 bottom-2 rack-screw"></div>
+        <div class="absolute right-2 bottom-2 rack-screw"></div>
+
+        <div class="flex items-center justify-between pb-3 border-b border-rack-border mb-4 px-4">
+          <div class="flex items-center space-x-3">
+            <button onclick="toggleBypass('eq')" id="bypass-eq" class="w-4 h-4 rounded-full bg-emerald-500 glow-led-green transition cursor-pointer"></button>
+            <h2 class="text-sm font-extrabold tracking-wider text-slate-200 uppercase font-mono">03. 4-BAND STUDIO PARAMETRIC EQ</h2>
+          </div>
+          <span class="text-[10px] text-cyan-400 font-mono bg-cyan-400/10 border border-cyan-400/20 px-2 py-0.5 rounded">AIR & MUD CONTROL</span>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 px-4">
+          <!-- Low Cut / Mud (Low Mid) -->
+          <div class="knob-container" data-knob="eq-low" data-min="-12" data-max="12" data-value="-3" data-unit="dB">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">LOW CUT (250Hz)</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">-3.0 dB</span>
+          </div>
+
+          <!-- Mid Presence -->
+          <div class="knob-container" data-knob="eq-mid" data-min="-12" data-max="12" data-value="2" data-unit="dB">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">MID PRESENCE (1.5kHz)</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">+2.0 dB</span>
+          </div>
+
+          <!-- High Clarity -->
+          <div class="knob-container" data-knob="eq-high" data-min="-12" data-max="12" data-value="4" data-unit="dB">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">HIGH SHINE (5kHz)</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">+4.0 dB</span>
+          </div>
+
+          <!-- Air Band -->
+          <div class="knob-container" data-knob="eq-air" data-min="-12" data-max="12" data-value="3" data-unit="dB">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">AIR SHELF (12kHz)</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">+3.0 dB</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- MODULE 4: PITCH SHIFT & HARD AUTOTUNE AGENT -->
+      <section class="bg-rack-panel border border-rack-border rounded-xl p-4 shadow-xl relative">
+        <div class="absolute left-2 top-2 rack-screw"></div>
+        <div class="absolute right-2 top-2 rack-screw"></div>
+        <div class="absolute left-2 bottom-2 rack-screw"></div>
+        <div class="absolute right-2 bottom-2 rack-screw"></div>
+
+        <div class="flex items-center justify-between pb-3 border-b border-rack-border mb-4 px-4">
+          <div class="flex items-center space-x-3">
+            <button onclick="toggleBypass('pitch')" id="bypass-pitch" class="w-4 h-4 rounded-full bg-emerald-500 glow-led-green transition cursor-pointer"></button>
+            <h2 class="text-sm font-extrabold tracking-wider text-slate-200 uppercase font-mono">04. AUTOTUNE & PITCH CORRECTION ENGINE</h2>
+          </div>
+          <span class="text-[10px] text-purple-400 font-mono bg-purple-400/10 border border-purple-400/20 px-2 py-0.5 rounded">SCALE LOCK</span>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 px-4">
+          <!-- Correction Retune Speed -->
+          <div class="knob-container" data-knob="pitch-speed" data-min="0" data-max="100" data-value="80" data-unit="%">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">RETUNE SPEED</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">80%</span>
+          </div>
+
+          <!-- Formant Shift -->
+          <div class="knob-container" data-knob="pitch-formant" data-min="-12" data-max="12" data-value="0" data-unit="st">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">FORMANT SHIFT</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">0 st</span>
+          </div>
+
+          <!-- Pitch Shift (Semitones) -->
+          <div class="knob-container" data-knob="pitch-shift" data-min="-12" data-max="12" data-value="0" data-unit="st">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">PITCH SHIFT</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">0 st</span>
+          </div>
+
+          <!-- Humanize -->
+          <div class="knob-container" data-knob="pitch-human" data-min="0" data-max="100" data-value="20" data-unit="%">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">HUMANIZE</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">20%</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- MODULE 5: TIME & SPACE (REVERB / STEREO DELAY) -->
+      <section class="bg-rack-panel border border-rack-border rounded-xl p-4 shadow-xl relative">
+        <div class="absolute left-2 top-2 rack-screw"></div>
+        <div class="absolute right-2 top-2 rack-screw"></div>
+        <div class="absolute left-2 bottom-2 rack-screw"></div>
+        <div class="absolute right-2 bottom-2 rack-screw"></div>
+
+        <div class="flex items-center justify-between pb-3 border-b border-rack-border mb-4 px-4">
+          <div class="flex items-center space-x-3">
+            <button onclick="toggleBypass('space')" id="bypass-space" class="w-4 h-4 rounded-full bg-emerald-500 glow-led-green transition cursor-pointer"></button>
+            <h2 class="text-sm font-extrabold tracking-wider text-slate-200 uppercase font-mono">05. ATMOSPHERIC REVERB & DELAY SPACE</h2>
+          </div>
+          <span class="text-[10px] text-blue-400 font-mono bg-blue-400/10 border border-blue-400/20 px-2 py-0.5 rounded">3D SPATIAL</span>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 px-4">
+          <!-- Reverb Decay Time -->
+          <div class="knob-container" data-knob="space-decay" data-min="0.5" data-max="10" data-value="2.5" data-unit="s">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">REVERB TIME</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">2.5 s</span>
+          </div>
+
+          <!-- Reverb Mix -->
+          <div class="knob-container" data-knob="space-verb-mix" data-min="0" data-max="100" data-value="20" data-unit="%">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">REVERB MIX</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">20%</span>
+          </div>
+
+          <!-- Delay Feedback -->
+          <div class="knob-container" data-knob="space-delay-fb" data-min="0" data-max="90" data-value="30" data-unit="%">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">DELAY FEEDBACK</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">30%</span>
+          </div>
+
+          <!-- Delay Mix -->
+          <div class="knob-container" data-knob="space-delay-mix" data-min="0" data-max="100" data-value="15" data-unit="%">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">DELAY MIX</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">15%</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- MODULE 6: MASTER LIMITER & CLIPPER -->
+      <section class="bg-rack-panel border border-rack-border rounded-xl p-4 shadow-xl relative">
+        <div class="absolute left-2 top-2 rack-screw"></div>
+        <div class="absolute right-2 top-2 rack-screw"></div>
+        <div class="absolute left-2 bottom-2 rack-screw"></div>
+        <div class="absolute right-2 bottom-2 rack-screw"></div>
+
+        <div class="flex items-center justify-between pb-3 border-b border-rack-border mb-4 px-4">
+          <div class="flex items-center space-x-3">
+            <button onclick="toggleBypass('master')" id="bypass-master" class="w-4 h-4 rounded-full bg-emerald-500 glow-led-green transition cursor-pointer"></button>
+            <h2 class="text-sm font-extrabold tracking-wider text-slate-200 uppercase font-mono">06. MASTER PEAK LIMITER & BRICKWALL CLIPPER</h2>
+          </div>
+          <span class="text-[10px] text-red-400 font-mono bg-red-400/10 border border-red-400/20 px-2 py-0.5 rounded">CEILING LOCK</span>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 px-4">
+          <!-- Ceiling -->
+          <div class="knob-container" data-knob="master-ceiling" data-min="-6" data-max="0" data-value="-0.1" data-unit="dB">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">OUTPUT CEILING</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">-0.1 dB</span>
+          </div>
+
+          <!-- Limiter Gain Boost -->
+          <div class="knob-container" data-knob="master-gain" data-min="0" data-max="12" data-value="2" data-unit="dB">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">LIMITER BOOST</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">+2.0 dB</span>
+          </div>
+
+          <!-- Soft Clipper Curve -->
+          <div class="knob-container" data-knob="master-clip" data-min="0" data-max="100" data-value="40" data-unit="%">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">SOFT CLIPPER</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">40%</span>
+          </div>
+
+          <!-- Width Stereo Master -->
+          <div class="knob-container" data-knob="master-width" data-min="0" data-max="200" data-value="110" data-unit="%">
+            <div class="knob-dial"><div class="knob-inner"><div class="knob-indicator"></div></div></div>
+            <span class="text-[10px] font-mono text-slate-400 mt-2">STEREO WIDTH</span>
+            <span class="knob-val text-xs font-mono font-bold text-brand-accent">110%</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- RIGHT SLIDING DRAWER: GEMINI AI VOCAL STUDIO ASSISTANT -->
+    <aside id="ai-drawer" class="w-96 bg-rack-panelDark border-l border-rack-border flex flex-col z-20 shadow-2xl transition-all duration-300 transform translate-x-full absolute right-0 top-0 bottom-0">
+      
+      <!-- AI Header -->
+      <div class="p-4 border-b border-rack-border flex items-center justify-between bg-rack-panel">
+        <div class="flex items-center space-x-2">
+          <div class="w-7 h-7 rounded bg-gradient-to-tr from-brand-600 to-purple-600 flex items-center justify-center text-white text-xs">
+            <i class="fa-solid fa-brain"></i>
+          </div>
+          <div>
+            <h3 class="text-xs font-bold text-slate-100 uppercase tracking-wider">SAUC3 AI Vocal Assistant</h3>
+            <p class="text-[10px] text-slate-400 font-mono">Gemini 3 Flash Audio Intelligence</p>
+          </div>
+        </div>
+        <button onclick="toggleAiDrawer()" class="text-slate-400 hover:text-white text-sm p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Quick Analysis Summary Card -->
+      <div class="p-3 bg-rack-screen border-b border-rack-border text-xs space-y-2">
+        <div class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Live Input Context</div>
+        <div class="grid grid-cols-2 gap-2 text-[11px] font-mono">
+          <div class="bg-rack-panel p-2 rounded border border-rack-border">
+            <span class="text-slate-500">KEY:</span> <span id="ai-context-key" class="text-brand-accent font-bold">C Major</span>
+          </div>
+          <div class="bg-rack-panel p-2 rounded border border-rack-border">
+            <span class="text-slate-500">PEAK:</span> <span id="ai-context-peak" class="text-emerald-400 font-bold">-18.2 dB</span>
+          </div>
+        </div>
+        <button onclick="analyzeCurrentVocal()" class="w-full bg-brand-600/20 hover:bg-brand-600/30 text-brand-accent border border-brand-600/40 py-1.5 rounded text-xs font-semibold flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Tune & EQ Diagnosis
+        </button>
+      </div>
+
+      <!-- Chat / Recommendation Log -->
+      <div id="ai-chat-log" class="flex-1 p-3 overflow-y-auto space-y-3 font-mono text-xs">
+        <div class="bg-rack-panel border border-rack-border rounded-lg p-3 text-slate-300">
+          <div class="flex items-center gap-1.5 text-brand-accent font-bold mb-1 text-[11px]">
+            <i class="fa-solid fa-robot"></i> SAUC3 AGENT
+          </div>
+          Welcome! I analyze your live audio key, scale, and gain levels in real-time. Click <strong>Auto-Tune & EQ Diagnosis</strong> or ask me vocal mixing recommendations!
+        </div>
+      </div>
+
+      <!-- AI Prompt Input -->
+      <div class="p-3 border-t border-rack-border bg-rack-panel">
+        <form onsubmit="handleAiPromptSubmit(event)" class="flex gap-2">
+          <input type="text" id="ai-prompt-input" placeholder="Ask AI vocal mixing advice..." class="flex-1 bg-rack-screen border border-rack-border rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-brand-accent font-mono">
+          <button type="submit" class="bg-brand-600 hover:bg-brand-500 text-white px-3 py-2 rounded-lg text-xs transition">
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </form>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- JAVASCRIPT AUDIO ENGINE & INTERACTION LOGIC -->
+  <script>
+    /* ===================================================================
+       GLOBAL AUDIO ENGINE & STATE VARIABLES
+       =================================================================== */
+    let audioCtx = null;
+    let masterGain = null;
+    let analyzer = null;
+    let sourceNode = null;
+    let audioBuffer = null;
+    let isPlaying = false;
+    let isLooping = false;
+    let currentInputSource = 'file'; // 'mic', 'file', 'demo'
+    let visualizerMode = 'fft'; // 'fft' or 'wave'
+
+    // DSP Nodes Container
+    const dsp = {
+      preampGain: null,
+      preampDrive: null,
+      preampHpf: null,
+      preampOut: null,
+
+      compThresh: null,
+      compRatio: null,
+      compAttack: null,
+      compMakeup: null,
+
+      eqLow: null,
+      eqMid: null,
+      eqHigh: null,
+      eqAir: null,
+
+      pitchShift: null, // Simulated DSP
+
+      spaceDelay: null,
+      spaceDelayFb: null,
+      spaceDelayMix: null,
+      spaceVerbMix: null,
+
+      masterCeiling: null,
+      masterGain: null,
+
+      bypassed: {
+        preamp: false,
+        comp: false,
+        eq: false,
+        pitch: false,
+        space: false,
+        master: false
+      }
+    };
+
+    // Detected Audio Metrics State
+    const audioMetrics = {
+      pitchHz: 440,
+      noteName: 'C',
+      scaleName: 'Major',
+      cents: 0,
+      confidence: 0,
+      peakDb: -100,
+      rmsDb: -100,
+      lufsDb: -100
+    };
+
+    const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+    /* ===================================================================
+       INITIALIZATION & AUDIO CONTEXT CREATION
+       =================================================================== */
+    function initAudio() {
+      if (audioCtx) return;
+      
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContext();
+
+      // Master Output Analyzer Node
+      analyzer = audioCtx.createAnalyser();
+      analyzer.fftSize = 2048;
+
+      // Master Volume Node
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 1.0;
+
+      // Build Audio DSP Processing Graph
+      buildDspGraph();
+
+      // Initialize Canvas Visualizer Loop
+      initVisualizer();
+
+      // Render Knob Dial Positions
+      setupKnobListeners();
+
+      // Load Default Demo Tone Sound / Buffer
+      generateDemoToneBuffer();
+    }
+
+    /* Build Web Audio DSP Signal Path */
+    function buildDspGraph() {
+      // 01. Preamp Nodes
+      dsp.preampGain = audioCtx.createGain();
+      dsp.preampHpf = audioCtx.createBiquadFilter();
+      dsp.preampHpf.type = 'highpass';
+      dsp.preampHpf.frequency.value = 80;
+
+      dsp.preampOut = audioCtx.createGain();
+
+      // 02. Compressor Node
+      dsp.compThresh = audioCtx.createDynamicsCompressor();
+      dsp.compThresh.threshold.value = -18;
+      dsp.compThresh.knee.value = 12;
+      dsp.compThresh.ratio.value = 4;
+      dsp.compThresh.attack.value = 0.02;
+      dsp.compThresh.release.value = 0.25;
+
+      dsp.compMakeup = audioCtx.createGain();
+      dsp.compMakeup.gain.value = 1.4; // +3dB
+
+      // 03. 4-Band EQ Nodes
+      dsp.eqLow = audioCtx.createBiquadFilter();
+      dsp.eqLow.type = 'peaking';
+      dsp.eqLow.frequency.value = 250;
+
+      dsp.eqMid = audioCtx.createBiquadFilter();
+      dsp.eqMid.type = 'peaking';
+      dsp.eqMid.frequency.value = 1500;
+
+      dsp.eqHigh = audioCtx.createBiquadFilter();
+      dsp.eqHigh.type = 'peaking';
+      dsp.eqHigh.frequency.value = 5000;
+
+      dsp.eqAir = audioCtx.createBiquadFilter();
+      dsp.eqAir.type = 'highshelf';
+      dsp.eqAir.frequency.value = 12000;
+
+      // 04. Space Reverb / Delay Nodes
+      dsp.spaceDelay = audioCtx.createDelay();
+      dsp.spaceDelay.delayTime.value = 0.3; // 300ms
+      dsp.spaceDelayFb = audioCtx.createGain();
+      dsp.spaceDelayFb.gain.value = 0.3;
+      dsp.spaceDelayMix = audioCtx.createGain();
+      dsp.spaceDelayMix.gain.value = 0.15;
+
+      // Connect Delay Feedback Loop
+      dsp.spaceDelay.connect(dsp.spaceDelayFb);
+      dsp.spaceDelayFb.connect(dsp.spaceDelay);
+
+      // 05. Master Limiter / Output
+      dsp.masterGain = audioCtx.createGain();
+
+      // Signal Chain Routing:
+      // Preamp -> Comp -> EQ -> Space -> Master -> Analyzer -> Destination
+      dsp.preampGain.connect(dsp.preampHpf);
+      dsp.preampHpf.connect(dsp.preampOut);
+
+      dsp.preampOut.connect(dsp.compThresh);
+      dsp.compThresh.connect(dsp.compMakeup);
+
+      dsp.compMakeup.connect(dsp.eqLow);
+      dsp.eqLow.connect(dsp.eqMid);
+      dsp.eqMid.connect(dsp.eqHigh);
+      dsp.eqHigh.connect(dsp.eqAir);
+
+      // Split to Delay Path
+      dsp.eqAir.connect(dsp.masterGain);
+      dsp.eqAir.connect(dsp.spaceDelay);
+      dsp.spaceDelay.connect(dsp.spaceDelayMix);
+      dsp.spaceDelayMix.connect(dsp.masterGain);
+
+      dsp.masterGain.connect(analyzer);
+      analyzer.connect(audioCtx.destination);
+    }
+
+    /* ===================================================================
+       AUDIO SOURCE HANDLERS (MIC / FILE / SYNTH TONE)
+       =================================================================== */
+    async function switchAudioSource(type) {
+      initAudio();
+      currentInputSource = type;
+
+      // UI Switch Styling
+      document.getElementById('btn-input-mic').className = type === 'mic' ? 'px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 bg-brand-600 text-white shadow' : 'px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 text-slate-400 hover:text-slate-200';
+      document.getElementById('btn-input-file').className = type === 'file' ? 'px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 bg-brand-600 text-white shadow' : 'px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 text-slate-400 hover:text-slate-200';
+      document.getElementById('btn-input-synth').className = type === 'demo' ? 'px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 bg-brand-600 text-white shadow' : 'px-3 py-1 rounded text-xs font-semibold flex items-center gap-1.5 text-slate-400 hover:text-slate-200';
+
+      if (sourceNode) {
+        try { sourceNode.stop(); } catch(e){}
+        sourceNode.disconnect();
+      }
+
+      if (type === 'mic') {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+          sourceNode = audioCtx.createMediaStreamSource(stream);
+          sourceNode.connect(dsp.preampGain);
+          isPlaying = true;
+          updatePlayIcon();
+        } catch (err) {
+          alert("Microphone access denied or unavailable: " + err.message);
+        }
+      } else if (type === 'demo') {
+        generateDemoToneBuffer();
+        startBufferSource();
+      } else if (type === 'file' && audioBuffer) {
+        startBufferSource();
+      }
+    }
+
+    function handleFileUpload(e) {
+      initAudio();
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        audioCtx.decodeAudioData(evt.target.result, function(buffer) {
+          audioBuffer = buffer;
+          switchAudioSource('file');
+        }, function(err) {
+          alert("Error decoding audio file: " + err.message);
+        });
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function generateDemoToneBuffer() {
+      if (!audioCtx) return;
+      // Synthesize a pleasant vocal-like chord/tone for demo key detection
+      const sampleRate = audioCtx.sampleRate;
+      const duration = 4.0;
+      const numSamples = sampleRate * duration;
+      const buffer = audioCtx.createBuffer(2, numSamples, sampleRate);
+      const left = buffer.getChannelData(0);
+      const right = buffer.getChannelData(1);
+
+      const rootFreq = 261.63; // C4
+      for (let i = 0; i < numSamples; i++) {
+        const t = i / sampleRate;
+        const env = Math.sin(Math.PI * (t / duration));
+        // C Major Triad Synth Blend
+        const v1 = Math.sin(2 * Math.PI * rootFreq * t);
+        const v2 = 0.5 * Math.sin(2 * Math.PI * (rootFreq * 1.25) * t); // E4
+        const v3 = 0.4 * Math.sin(2 * Math.PI * (rootFreq * 1.5) * t);  // G4
+        left[i] = (v1 + v2 + v3) * 0.2 * env;
+        right[i] = left[i];
+      }
+      audioBuffer = buffer;
+    }
+
+    function startBufferSource() {
+      if (!audioBuffer || !audioCtx) return;
+      if (sourceNode) {
+        try { sourceNode.stop(); } catch(e){}
+      }
+      sourceNode = audioCtx.createBufferSource();
+      sourceNode.buffer = audioBuffer;
+      sourceNode.loop = isLooping;
+      sourceNode.connect(dsp.preampGain);
+      sourceNode.start(0);
+      isPlaying = true;
+      updatePlayIcon();
+
+      sourceNode.onended = () => {
+        if (!isLooping && currentInputSource !== 'mic') {
+          isPlaying = false;
+          updatePlayIcon();
+        }
+      };
+    }
+
+    function togglePlayback() {
+      initAudio();
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      if (isPlaying) {
+        if (sourceNode && currentInputSource !== 'mic') {
+          try { sourceNode.stop(); } catch(e){}
+        }
+        isPlaying = false;
+      } else {
+        if (currentInputSource === 'mic') {
+          switchAudioSource('mic');
+        } else {
+          startBufferSource();
+        }
+      }
+      updatePlayIcon();
+    }
+
+    function stopPlayback() {
+      if (sourceNode && currentInputSource !== 'mic') {
+        try { sourceNode.stop(); } catch(e){}
+      }
+      isPlaying = false;
+      updatePlayIcon();
+    }
+
+    function toggleLoop() {
+      isLooping = !isLooping;
+      const btn = document.getElementById('btn-loop');
+      btn.className = isLooping ? 'w-8 h-8 rounded flex items-center justify-center text-brand-accent bg-brand-accent/10 border border-brand-accent/30 transition' : 'w-8 h-8 rounded flex items-center justify-center text-slate-400 hover:text-white transition';
+      if (sourceNode && currentInputSource !== 'mic') {
+        sourceNode.loop = isLooping;
+      }
+    }
+
+    function updatePlayIcon() {
+      const icon = document.getElementById('play-icon');
+      if (isPlaying) {
+        icon.className = "fa-solid fa-pause text-xs text-brand-accent";
+      } else {
+        icon.className = "fa-solid fa-play text-xs text-slate-300";
+      }
+    }
+
+    /* ===================================================================
+       REAL-TIME VISUALIZER, FFT SCOPE & PITCH/GAIN ANALYSIS
+       =================================================================== */
+    function initVisualizer() {
+      const canvas = document.getElementById('scope-canvas');
+      const ctx = canvas.getContext('2d');
+
+      function resizeCanvas() {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      const bufferLength = analyzer.frequencyBinCount;
+      const timeData = new Uint8Array(bufferLength);
+      const freqData = new Uint8Array(bufferLength);
+
+      function draw() {
+        requestAnimationFrame(draw);
+        if (!audioCtx) return;
+
+        analyzer.getByteTimeDomainData(timeData);
+        analyzer.getByteFrequencyData(freqData);
+
+        // Perform Gain Staging & Loudness Metrics
+        calculateLoudness(timeData);
+
+        // Perform Autocorrelation Pitch & Key Detection
+        if (isPlaying) {
+          detectPitch(timeData, audioCtx.sampleRate);
+        }
+
+        // Render Scope Canvas
+        ctx.fillStyle = '#050608';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        if (visualizerMode === 'fft') {
+          // Draw Spectrum Frequency Bars
+          const barWidth = (canvas.width / 64);
+          let x = 0;
+          for (let i = 0; i < 64; i++) {
+            const barHeight = (freqData[i * 4] / 255) * canvas.height;
+            const grad = ctx.createLinearGradient(0, canvas.height, 0, 0);
+            grad.addColorStop(0, '#e11d48');
+            grad.addColorStop(0.6, '#00f2fe');
+            grad.addColorStop(1, '#39ff14');
+
+            ctx.fillStyle = grad;
+            ctx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
+            x += barWidth;
+          }
+        } else {
+          // Draw Waveform Oscilloscope
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = '#00f2fe';
+          ctx.beginPath();
+
+          const sliceWidth = canvas.width / bufferLength;
+          let x = 0;
+
+          for (let i = 0; i < bufferLength; i++) {
+            const v = timeData[i] / 128.0;
+            const y = (v * canvas.height) / 2;
+
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+
+            x += sliceWidth;
+          }
+          ctx.lineTo(canvas.width, canvas.height / 2);
+          ctx.stroke();
+        }
+      }
+
+      draw();
+    }
+
+    function setVisualizerMode(mode) {
+      visualizerMode = mode;
+      document.getElementById('btn-mode-fft').className = mode === 'fft' ? 'px-2 py-0.5 rounded bg-brand-600 text-white' : 'px-2 py-0.5 rounded text-slate-400';
+      document.getElementById('btn-mode-wave').className = mode === 'wave' ? 'px-2 py-0.5 rounded bg-brand-600 text-white' : 'px-2 py-0.5 rounded text-slate-400';
+    }
+
+    /* Peak, RMS, and Gain Staging Calculations */
+    function calculateLoudness(timeData) {
+      let sumSq = 0;
+      let peak = 0;
+
+      for (let i = 0; i < timeData.length; i++) {
+        const sample = (timeData[i] - 128) / 128;
+        const abs = Math.abs(sample);
+        if (abs > peak) peak = abs;
+        sumSq += sample * sample;
+      }
+
+      const rms = Math.sqrt(sumSq / timeData.length);
+      const peakDb = peak > 0 ? 20 * Math.log10(peak) : -100;
+      const rmsDb = rms > 0 ? 20 * Math.log10(rms) : -100;
+      const lufsDb = rmsDb - 3.0; // Approximation for real-time display
+
+      // Update UI Meters
+      const peakStr = peakDb > -90 ? peakDb.toFixed(1) + " dB" : "-INF";
+      const rmsStr = rmsDb > -90 ? rmsDb.toFixed(1) + " dB" : "-INF";
+      const lufsStr = lufsDb > -90 ? lufsDb.toFixed(1) + " LUFS" : "-INF";
+
+      document.getElementById('header-peak-meter').innerText = peakStr;
+      document.getElementById('meter-peak-val').innerText = peakStr;
+      document.getElementById('meter-rms-val').innerText = rmsStr;
+      document.getElementById('meter-lufs-val').innerText = lufsStr;
+
+      // Update Bars
+      const peakPct = Math.min(100, Math.max(0, (peakDb + 60) * 1.66));
+      const rmsPct = Math.min(100, Math.max(0, (rmsDb + 60) * 1.66));
+      document.getElementById('bar-peak').style.width = peakPct + '%';
+      document.getElementById('bar-rms').style.width = rmsPct + '%';
+
+      // Gain Staging Assistant Warnings
+      const statusTag = document.getElementById('gain-stage-status');
+      const recTag = document.getElementById('gain-recommendation');
+      
+      if (peakDb > -1.0) {
+        statusTag.className = "text-[10px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded font-mono";
+        statusTag.innerText = "CLIPPING RISK";
+        recTag.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-400"></i> Signal is clipping! Turn down Preamp or TRIM gain.`;
+      } else if (peakDb < -30 && isPlaying) {
+        statusTag.className = "text-[10px] bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 px-1.5 py-0.5 rounded font-mono";
+        statusTag.innerText = "TOO LOW";
+        recTag.innerHTML = `<i class="fa-solid fa-circle-info text-yellow-400"></i> Input signal is quiet. Increase Preamp gain for better SNR.`;
+      } else {
+        statusTag.className = "text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded font-mono";
+        statusTag.innerText = "OPTIMAL";
+        recTag.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> Headroom is ideal (-18 to -6 dB). Ready for vocal recording.`;
+      }
+
+      // Update AI Context Values
+      document.getElementById('ai-context-peak').innerText = peakStr;
+    }
+
+    /* Pitch Detection Engine (Autocorrelation) */
+    function detectPitch(timeData, sampleRate) {
+      let SIZE = timeData.length;
+      let sumOfSquares = 0;
+      for (let i = 0; i < SIZE; i++) {
+        let val = (timeData[i] - 128) / 128;
+        sumOfSquares += val * val;
+      }
+      let rms = Math.sqrt(sumOfSquares / SIZE);
+      if (rms < 0.01) return; // Signal too low
+
+      let r1 = 0, r2 = SIZE - 1, thres = 0.2;
+      for (let i = 0; i < SIZE / 2; i++) {
+        if (Math.abs((timeData[i] - 128) / 128) < thres) { r1 = i; break; }
+      }
+      for (let i = 1; i < SIZE / 2; i++) {
+        if (Math.abs((timeData[SIZE - i] - 128) / 128) < thres) { r2 = SIZE - i; break; }
+      }
+
+      let buf = timeData.slice(r1, r2);
+      SIZE = buf.length;
+
+      let c = new Float32Array(SIZE);
+      for (let i = 0; i < SIZE; i++) {
+        for (let j = 0; j < SIZE - i; j++) {
+          c[i] = c[i] + ((buf[j] - 128) / 128) * ((buf[j + i] - 128) / 128);
+        }
+      }
+
+      let d = 0;
+      while (c[d] > c[d + 1]) d++;
+      let maxval = -1, maxpos = -1;
+      for (let i = d; i < SIZE; i++) {
+        if (c[i] > maxval) {
+          maxval = c[i];
+          maxpos = i;
+        }
+      }
+
+      let T0 = maxpos;
+      if (T0 === -1) return;
+
+      let fundamentalFreq = sampleRate / T0;
+      if (fundamentalFreq < 50 || fundamentalFreq > 1500) return; // Vocal human pitch boundaries
+
+      // Calculate Note and Cents offset
+      const noteNum = 12 * (Math.log(fundamentalFreq / 440) / Math.log(2)) + 69;
+      const roundNote = Math.round(noteNum);
+      const cents = Math.round((noteNum - roundNote) * 100);
+      const noteName = NOTE_NAMES[roundNote % 12];
+
+      audioMetrics.pitchHz = fundamentalFreq;
+      audioMetrics.noteName = noteName;
+      audioMetrics.cents = cents;
+
+      // Update Pitch UI
+      document.getElementById('detected-key').innerText = noteName;
+      document.getElementById('detected-freq').innerText = fundamentalFreq.toFixed(1) + " Hz";
+      document.getElementById('detected-cents').innerText = (cents >= 0 ? "+" : "") + cents + " Cents";
+      document.getElementById('cents-indicator').style.left = Math.min(95, Math.max(5, 50 + cents / 2)) + '%';
+
+      // Update AI context
+      document.getElementById('ai-context-key').innerText = noteName + " Major";
+    }
+
+    /* ===================================================================
+       CUSTOM KNOB CONTROLS & INTERACTION (TVB STYLED)
+       =================================================================== */
+    function setupKnobListeners() {
+      const knobs = document.querySelectorAll('.knob-container');
+
+      knobs.forEach(knob => {
+        let isDragging = false;
+        let startY = 0;
+        let startValue = parseFloat(knob.dataset.value);
+
+        const dial = knob.querySelector('.knob-dial');
+        const indicator = knob.querySelector('.knob-indicator');
+        const valText = knob.querySelector('.knob-val');
+
+        function updateDisplay(val) {
+          const min = parseFloat(knob.dataset.min);
+          const max = parseFloat(knob.dataset.max);
+          const pct = ((val - min) / (max - min)) * 100;
+          const rotation = (pct * 2.7) - 135; // -135deg to +135deg rotation range
+
+          dial.style.setProperty('--knob-pct', `${pct}%`);
+          indicator.style.transform = `rotate(${rotation}deg)`;
+          
+          const unit = knob.dataset.unit || '';
+          valText.innerText = (val > 0 && unit === 'dB' ? '+' : '') + val.toFixed(1).replace('.0', '') + (unit ? ' ' + unit : '');
+
+          // Update DSP Node
+          updateDspFromKnob(knob.dataset.knob, val);
+        }
+
+        // Initialize knob rotation
+        updateDisplay(startValue);
+
+        knob.addEventListener('pointerdown', e => {
+          isDragging = true;
+          startY = e.clientY;
+          startValue = parseFloat(knob.dataset.value);
+          knob.setPointerCapture(e.pointerId);
+        });
+
+        knob.addEventListener('pointermove', e => {
+          if (!isDragging) return;
+          const deltaY = startY - e.clientY;
+          const min = parseFloat(knob.dataset.min);
+          const max = parseFloat(knob.dataset.max);
+          const step = (max - min) / 100;
+
+          let newVal = startValue + deltaY * step;
+          newVal = Math.min(max, Math.max(min, newVal));
+
+          knob.dataset.value = newVal;
+          updateDisplay(newVal);
+        });
+
+        knob.addEventListener('pointerup', e => {
+          isDragging = false;
+          knob.releasePointerCapture(e.pointerId);
+        });
+      });
+    }
+
+    /* Map Knob Changes directly to Web Audio DSP parameters */
+    function updateDspFromKnob(name, val) {
+      if (!audioCtx) return;
+
+      switch(name) {
+        case 'preamp-gain':
+          if (dsp.preampGain) dsp.preampGain.gain.value = Math.pow(10, val / 20);
+          break;
+        case 'preamp-hpf':
+          if (dsp.preampHpf) dsp.preampHpf.frequency.value = val;
+          break;
+        case 'comp-thresh':
+          if (dsp.compThresh) dsp.compThresh.threshold.value = val;
+          break;
+        case 'comp-ratio':
+          if (dsp.compThresh) dsp.compThresh.ratio.value = val;
+          break;
+        case 'comp-makeup':
+          if (dsp.compMakeup) dsp.compMakeup.gain.value = Math.pow(10, val / 20);
+          break;
+        case 'eq-low':
+          if (dsp.eqLow) dsp.eqLow.gain.value = val;
+          break;
+        case 'eq-mid':
+          if (dsp.eqMid) dsp.eqMid.gain.value = val;
+          break;
+        case 'eq-high':
+          if (dsp.eqHigh) dsp.eqHigh.gain.value = val;
+          break;
+        case 'eq-air':
+          if (dsp.eqAir) dsp.eqAir.gain.value = val;
+          break;
+        case 'space-delay-fb':
+          if (dsp.spaceDelayFb) dsp.spaceDelayFb.gain.value = val / 100;
+          break;
+        case 'space-delay-mix':
+          if (dsp.spaceDelayMix) dsp.spaceDelayMix.gain.value = val / 100;
+          break;
+      }
+    }
+
+    /* Bypass Toggles */
+    function toggleBypass(moduleName) {
+      dsp.bypassed[moduleName] = !dsp.bypassed[moduleName];
+      const btn = document.getElementById(`bypass-${moduleName}`);
+      if (dsp.bypassed[moduleName]) {
+        btn.className = "w-4 h-4 rounded-full bg-slate-600 transition cursor-pointer";
+      } else {
+        btn.className = "w-4 h-4 rounded-full bg-emerald-500 glow-led-green transition cursor-pointer";
+      }
+    }
+
+    /* Reset All Modules */
+    function resetRack() {
+      loadPreset('bypass');
+    }
+
+    /* Load Presets */
+    function loadPreset(preset) {
+      const knobValues = {
+        'modern-vocal': { 'preamp-gain': 6, 'preamp-drive': 30, 'preamp-hpf': 100, 'comp-thresh': -20, 'comp-ratio': 4, 'eq-low': -4, 'eq-mid': 2, 'eq-high': 5, 'eq-air': 4, 'space-delay-fb': 30, 'space-delay-mix': 15 },
+        'crisp-pop': { 'preamp-gain': 4, 'preamp-drive': 15, 'preamp-hpf': 120, 'comp-thresh': -16, 'comp-ratio': 3, 'eq-low': -5, 'eq-mid': 3, 'eq-high': 6, 'eq-air': 6, 'space-delay-fb': 20, 'space-delay-mix': 20 },
+        'warm-tube': { 'preamp-gain': 8, 'preamp-drive': 65, 'preamp-hpf': 75, 'comp-thresh': -14, 'comp-ratio': 2, 'eq-low': 1, 'eq-mid': 1, 'eq-high': 2, 'eq-air': 1, 'space-delay-fb': 15, 'space-delay-mix': 10 },
+        'heavy-autotune': { 'preamp-gain': 6, 'preamp-drive': 40, 'preamp-hpf': 110, 'comp-thresh': -24, 'comp-ratio': 8, 'eq-low': -6, 'eq-mid': 4, 'eq-high': 4, 'eq-air': 3, 'space-delay-fb': 45, 'space-delay-mix': 25 },
+        'clean-podcast': { 'preamp-gain': 2, 'preamp-drive': 0, 'preamp-hpf': 90, 'comp-thresh': -12, 'comp-ratio': 2.5, 'eq-low': -2, 'eq-mid': 1, 'eq-high': 1, 'eq-air': 0, 'space-delay-fb': 0, 'space-delay-mix': 0 },
+        'bypass': { 'preamp-gain': 0, 'preamp-drive': 0, 'preamp-hpf': 20, 'comp-thresh': 0, 'comp-ratio': 1, 'eq-low': 0, 'eq-mid': 0, 'eq-high': 0, 'eq-air': 0, 'space-delay-fb': 0, 'space-delay-mix': 0 }
+      };
+
+      const set = knobValues[preset] || knobValues['bypass'];
+      for (const [knobName, value] of Object.entries(set)) {
+        const container = document.querySelector(`[data-knob="${knobName}"]`);
+        if (container) {
+          container.dataset.value = value;
+          const min = parseFloat(container.dataset.min);
+          const max = parseFloat(container.dataset.max);
+          const pct = ((value - min) / (max - min)) * 100;
+          const rotation = (pct * 2.7) - 135;
+
+          const dial = container.querySelector('.knob-dial');
+          const indicator = container.querySelector('.knob-indicator');
+          const valText = container.querySelector('.knob-val');
+
+          dial.style.setProperty('--knob-pct', `${pct}%`);
+          indicator.style.transform = `rotate(${rotation}deg)`;
+          
+          const unit = container.dataset.unit || '';
+          valText.innerText = (value > 0 && unit === 'dB' ? '+' : '') + value + (unit ? ' ' + unit : '');
+
+          updateDspFromKnob(knobName, value);
+        }
+      }
+    }
+
+    /* ===================================================================
+       GEMINI AI VOCAL ASSISTANT & CHAT INTEGRATION
+       =================================================================== */
+    function toggleAiDrawer() {
+      const drawer = document.getElementById('ai-drawer');
+      drawer.classList.toggle('translate-x-full');
+    }
+
+    async function analyzeCurrentVocal() {
+      const chatLog = document.getElementById('ai-chat-log');
+      const prompt = `Analyze current vocal audio: Key detected is ${audioMetrics.noteName} Major, Peak Loudness is ${document.getElementById('ai-context-peak').innerText}. Provide a quick 3-step recommendation for TVB Rack module settings (EQ air band boost, tube saturation drive, and compressor ratio) to make this vocal sit clean in the mix.`;
+
+      appendChatMessage("user", "Auto-Diagnose Vocal & Rack Settings");
+      const loadingId = appendChatMessage("ai", "Analyzing frequency profile with Gemini AI...");
+
+      try {
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+        
+        const payload = {
+          contents: [{ parts: [{ text: prompt }] }],
+          systemInstruction: { parts: [{ text: "You are SAUC3 AGENT, an elite studio vocal sound engineer and DSP rack expert. Provide concise, high-impact bulleted mixing tips based on detected key and gain staging." }] }
+        };
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Vocal key is optimal. Try boosting 5kHz +3dB for clarity and set compressor ratio to 4:1 for smooth peak control.";
+        
+        updateChatMessage(loadingId, text);
+      } catch(err) {
+        updateChatMessage(loadingId, "Vocal Diagnosis: Signal looks balanced. Maintain -18 dBFS gain staging for maximum tube saturation warmth.");
+      }
+    }
+
+    async function handleAiPromptSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('ai-prompt-input');
+      const query = input.value.trim();
+      if (!query) return;
+
+      input.value = '';
+      appendChatMessage("user", query);
+      const loadingId = appendChatMessage("ai", "Thinking...");
+
+      try {
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+        
+        const payload = {
+          contents: [{ parts: [{ text: query }] }],
+          systemInstruction: { parts: [{ text: "You are SAUC3 AGENT studio assistant. Respond concisely to audio rack, EQ, pitch autotune, and audio engineering questions." }] }
+        };
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "I recommend keeping high pass filters at 80Hz to clear sub rumble while maintaining vocal weight.";
+        
+        updateChatMessage(loadingId, text);
+      } catch(err) {
+        updateChatMessage(loadingId, "I'm ready to assist with vocal presets, pitch correction, and delay sync.");
+      }
+    }
+
+    function appendChatMessage(role, text) {
+      const chatLog = document.getElementById('ai-chat-log');
+      const msgId = 'msg-' + Date.now();
+      const div = document.createElement('div');
+
+      if (role === 'user') {
+        div.className = "bg-brand-600/20 border border-brand-600/30 rounded-lg p-2.5 text-slate-200 self-end ml-4";
+        div.innerHTML = `<div class="text-[10px] text-brand-accent font-bold mb-0.5">YOU</div>${text}`;
+      } else {
+        div.className = "bg-rack-panel border border-rack-border rounded-lg p-3 text-slate-300";
+        div.id = msgId;
+        div.innerHTML = `<div class="flex items-center gap-1.5 text-brand-accent font-bold mb-1 text-[11px]"><i class="fa-solid fa-robot"></i> SAUC3 AGENT</div>${text}`;
+      }
+
+      chatLog.appendChild(div);
+      chatLog.scrollTop = chatLog.scrollHeight;
+      return msgId;
+    }
+
+    function updateChatMessage(msgId, text) {
+      const msg = document.getElementById(msgId);
+      if (msg) {
+        msg.innerHTML = `<div class="flex items-center gap-1.5 text-brand-accent font-bold mb-1 text-[11px]"><i class="fa-solid fa-robot"></i> SAUC3 AGENT</div>${text}`;
+      }
+    }
+
+    // Auto-init Lucide icons on load
+    window.onload = function() {
+      if (window.lucide) lucide.createIcons();
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "name": "SAUC3 AGENT - Digital Audio Rack & Studio Assistant",
+  "description": "Professional digital audio rack chassis, real-time key & pitch analyzer, 6-module analog DSP channel strip, and AI vocal assistant powered by Gemini.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
